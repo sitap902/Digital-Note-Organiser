@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}Note Organizer{% endblock %}
+{% block content %}
+<div class="workspace inspo-workspace">
+  <aside class="sidebar-panel olive-panel">
+    <div class="brand-block brand-soft">
+      <div class="brand-icon cat-icon">✦</div>
+      <div>
+        <p class="eyebrow">Minimal digital library</p>
+        <h1>Note Organizer</h1>
+      </div>
+    </div>
+
+    <div class="user-chip moss-chip">
+      <div class="avatar moss-avatar">{{ user.first_name[:1] | upper }}</div>
+      <div>
+        <strong>{{ user.first_name }}</strong>
+        <p>{{ user.email }}</p>
+      </div>
+    </div>
+
+    <section class="sidebar-section">
+      <p class="section-label">Notebooks</p>
+      <a class="nav-link {% if selected_notebook == 'All' %}active{% endif %}" href="{{ url_for('views.home', type=selected_type, q=query) }}">
+        <span>All spaces</span><span>{{ stats.total_notes }}</span>
+      </a>
+      {% for notebook, count in notebook_counts.items() %}
+      <a class="nav-link {% if selected_notebook == notebook %}active{% endif %}" href="{{ url_for('views.home', notebook=notebook, type=selected_type, q=query) }}">
+        <span>{{ notebook }}</span><span>{{ count }}</span>
+      </a>
+      {% endfor %}
+    </section>
+
+    <section class="sidebar-section">
+      <p class="section-label">Overview</p>
+      <div class="stat-grid compact">
+        <div class="stat-card olive-stat"><strong>{{ stats.notebooks }}</strong><span>Notebooks</span></div>
+        <div class="stat-card olive-stat"><strong>{{ stats.pdfs }}</strong><span>PDFs</span></div>
+        <div class="stat-card olive-stat"><strong>{{ stats.pinned_notes }}</strong><span>Pinned</span></div>
+        <div class="stat-card olive-stat"><strong>{{ stats.filtered_notes }}</strong><span>Visible</span></div>
+      </div>
+    </section>
+
+    <a class="logout-link dark-olive" href="{{ url_for('auth.logout') }}">Log out</a>
+  </aside>
+
+
+
+    <section class="dual-cards">
+      <section class="composer-card organizer-shell">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Quick capture</p>
+            <h3>Create a note</h3>
+          </div>
+        </div>
+
+        <form method="POST" class="organizer-form">
+          <div class="form-row two-col">
+            <input type="text" name="title" placeholder="Note title">
+            <input type="text" name="notebook" placeholder="Notebook name">
+          </div>
+
+          <div class="form-row three-col">
+            <select name="category">
+              <option value="Lecture">Lecture</option>
+              <option value="Reading">Reading</option>
+              <option value="Meeting">Meeting</option>
+              <option value="Summary">Summary</option>
+              <option value="Personal">Personal</option>
+            </select>
+            <input type="text" name="tags" placeholder="Tags, e.g. torts, chapter-2">
+            <label class="toggle-box"><input type="checkbox" name="pinned"> Pin note</label>
+          </div>
+
+          <textarea name="note" placeholder="Write your note, summary, annotations, or reading highlights."></textarea>
+          <button type="submit" class="primary-btn olive-btn">Save note</button>
+        </form>
+      </section>
+
+      <section class="composer-card organizer-shell upload-shell">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Reference library</p>
+            <h3>Upload a PDF</h3>
+          </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('views.upload_pdf') }}" class="organizer-form" enctype="multipart/form-data">
+          <div class="upload-dropzone">
+            <input type="file" name="pdf_file" accept="application/pdf" required>
+            <div>
+              <strong>Drop in a PDF or browse</strong>
+              <p>Store lecture slides, readings, cases, or articles beside your notes.</p>
+            </div>
+          </div>
+          <div class="form-row two-col">
+            <input type="text" name="pdf_title" placeholder="Display title for PDF">
+            <input type="text" name="pdf_notebook" placeholder="Notebook, e.g. Case Law">
+          </div>
+          <div class="form-row two-col upload-meta-row">
+            <input type="text" name="pdf_tags" placeholder="Tags, e.g. exam, reading">
+            <label class="toggle-box"><input type="checkbox" name="pdf_pinned"> Pin PDF</label>
+          </div>
+          <button type="submit" class="primary-btn olive-btn">Upload PDF</button>
+        </form>
+      </section>
+    </section>
+
+    <section class="library-card organizer-shell">
+      <div class="library-toolbar">
+        <div>
+          <p class="eyebrow">Library</p>
+          <h3>Notes & PDFs</h3>
+        </div>
+        <form method="GET" class="filters-form filters-olive">
+          <input type="text" name="q" value="{{ query }}" placeholder="Search title, tags, notebook, content">
+          <select name="type">
+            <option value="All" {% if selected_type == 'All' %}selected{% endif %}>All items</option>
+            {% for item_type, count in type_counts.items() %}
+            <option value="{{ item_type }}" {% if selected_type == item_type %}selected{% endif %}>{{ item_type }} ({{ count }})</option>
+            {% endfor %}
+          </select>
+          {% if selected_notebook != 'All' %}
+          <input type="hidden" name="notebook" value="{{ selected_notebook }}">
+          {% endif %}
+          <button type="submit" class="ghost-btn olive-ghost">Apply</button>
+        </form>
+      </div>
+
+      <div class="notes-feed">
+        {% if notes %}
+          {% for note in notes %}
+          <a class="note-link-wrap" href="{{ url_for('views.home', notebook=selected_notebook if selected_notebook != 'All' else None, type=selected_type, q=query, selected=note.id) }}">
+            <article class="note-tile note-olive {% if active_note and active_note.id == note.id %}active{% endif %}">
+              <div class="note-topline">
+                <span class="chip olive-chip">{{ 'PDF' if note.file else note.category }}</span>
+                {% if note.pinned %}<span class="pin-badge olive-pin">Pinned</span>{% endif %}
+              </div>
+              <h4>{{ note.title }}</h4>
+              <p class="meta-line">{{ note.notebook }} · {{ note.date.strftime('%d %b %Y %H:%M') if note.date else '' }}</p>
+              {% if note.file %}
+                <p class="note-preview">PDF resource ready for reading in the side panel.</p>
+                <p class="tags-line">{{ note.file.split('_', 1)[1] if '_' in note.file else note.file }}</p>
+              {% else %}
+                <p class="note-preview">{{ note.data[:180] }}{% if note.data|length > 180 %}…{% endif %}</p>
+              {% endif %}
+              {% if note.tags %}<p class="tags-line">#{{ note.tags.replace(',', ' #') }}</p>{% endif %}
+              <div class="tile-actions">
+                <button type="button" class="mini-btn olive-mini" onclick="event.preventDefault(); togglePin('{{ note.id }}')">{% if note.pinned %}Unpin{% else %}Pin{% endif %}</button>
+                <button type="button" class="mini-btn danger" onclick="event.preventDefault(); deleteNote('{{ note.id }}')">Delete</button>
+              </div>
+            </article>
+          </a>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state olive-empty">
+            <h4>No items match these filters.</h4>
+            <p>Try another notebook, clear the search, or add a new note or PDF above.</p>
+          </div>
+        {% endif %}
+      </div>
+    </section>
+  </main>
+
+  <aside class="preview-panel">
+    <div class="preview-card sticky organizer-shell preview-olive">
+      <p class="eyebrow">Preview</p>
+      {% if active_note %}
+        <div class="preview-header">
+          <h3>{{ active_note.title }}</h3>
+          <span class="chip alt olive-chip">{{ 'PDF' if active_note.file else active_note.category }}</span>
+        </div>
+        <p class="meta-line">{{ active_note.notebook }} · {{ active_note.date.strftime('%d %b %Y %H:%M') if active_note.date else '' }}</p>
+        {% if active_note.tags %}<p class="tags-line">#{{ active_note.tags.replace(',', ' #') }}</p>{% endif %}
+        {% if active_note.file %}
+          <div class="pdf-frame-wrap">
+            <iframe class="pdf-frame" src="{{ url_for('views.uploaded_file', filename=active_note.file) }}"></iframe>
+          </div>
+        {% else %}
+          <div class="preview-body">{{ active_note.data | replace('
+', '<br>') | safe }}</div>
+        {% endif %}
+      {% else %}
+        <div class="empty-state left olive-empty">
+          <h4>No item selected</h4>
+          <p>Your latest note or uploaded PDF will appear here.</p>
+        </div>
+      {% endif %}
+    </div>
+  </aside>
+</div>
+{% endblock %}

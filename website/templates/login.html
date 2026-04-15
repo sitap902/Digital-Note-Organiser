@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <p class="eyebrow">Welcome back</p>
+  <h1>Sign in to your organizer</h1>
+  <form method="POST" class="auth-form">
+    <input type="email" name="email" placeholder="Email address">
+    <input type="password" name="password" placeholder="Password">
+    <button type="submit" class="primary-btn">Log in</button>
+  </form>
+  <p class="switch-link">Need an account? <a href="{{ url_for('auth.sign_up') }}">Create one</a></p>
+</div>
+{% endblock %}
