@@ -44,8 +44,7 @@ Digital-Note-Organiser/
 ```
 
 ---
-
-## ⚙️ Installation
+## ⚙️ Installation (Windows)
 
 1. Clone the repository
 
@@ -54,15 +53,7 @@ git clone https://github.com/sitap902/Digital-Note-Organiser.git
 cd Digital-Note-Organiser
 ```
 
-2. Create and activate virtual environment
-
-```bash
-python3 -m venv venv
-source venv/bin/activate   # Mac/Linux
-venv\Scripts\activate      # Windows
-```
-
-3. Install dependencies
+2. Install dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -82,7 +73,7 @@ Open your browser and go to:
 http://127.0.0.1:5000
 ```
 
----
+
 
 ## 📌 Usage
 
