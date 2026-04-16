@@ -100,16 +100,6 @@ uploads/
 
 ---
 
-## 🔮 Future Improvements
-
-* Search and filter notes
-* Edit and delete notes
-* Better UI/UX design
-* Cloud storage integration
-* User profile management
-
----
-
 ## 👤 Author
 
 * GitHub: https://github.com/sitap902
