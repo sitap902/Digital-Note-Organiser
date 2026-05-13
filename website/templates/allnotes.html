@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}All Notes{% endblock %}
+
+{% block content %}
+
+<div class="notes-page">
+
+  <!-- HEADER -->
+
+  <section class="notes-hero">
+
+    <p class="notes-label">
+      DIGITAL LIBRARY
+    </p>
+
+    <h1>
+      Your Notes
+    </h1>
+
+    <p class="notes-subtitle">
+      Browse your saved notes, PDFs, research,
+      and study materials beautifully.
+    </p>
+
+    <div class="notes-toolbar">
+
+      <a
+        href="{{ url_for('views.new_note') }}"
+        class="new-note-btn"
+      >
+        ✨ New Note
+      </a>
+
+      <div class="notes-filters">
+
+        <input
+          type="text"
+          placeholder="Search notes..."
+        >
+
+        <select>
+
+          <option>
+            All Categories
+          </option>
+
+          <option>
+            Lecture
+          </option>
+
+          <option>
+            Research
+          </option>
+
+          <option>
+            Journal
+          </option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- NOTES GRID -->
+
+  <section class="notes-grid">
+
+    {% for note in notes %}
+
+  <a
+  href="{{ url_for('views.view_note', note_id=note.id) }}"
+  class="note-link"
+>
+
+  <article class="note-card">
+
+      <div class="note-top">
+
+        <div class="note-icon">
+
+          {% if note.file %}
+            📄
+          {% else %}
+            📝
+          {% endif %}
+
+        </div>
+
+        <button class="note-menu">
+          ⋮
+        </button>
+
+      </div>
+
+      <h2>
+        {{ note.title }}
+      </h2>
+
+      <p>
+
+        {% if note.file %}
+          Uploaded PDF resource ready for reading.
+        {% else %}
+          {{ note.data[:120] }}
+        {% endif %}
+
+      </p>
+
+      <div class="note-footer">
+
+        <span class="note-badge">
+
+          {% if note.file %}
+            PDF
+          {% else %}
+            {{ note.category }}
+          {% endif %}
+
+        </span>
+
+        <span class="note-date">
+
+          {% if note.date %}
+            {{ note.date.strftime('%b %d, %Y') }}
+          {% endif %}
+
+        </span>
+
+      </div>
+
+    </article>
+    </a>
+
+    {% endfor %}
+
+  </section>
+
+</div>
+
+{% endblock %}

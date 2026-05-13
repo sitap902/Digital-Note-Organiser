@@ -1,27 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
-  <title>{% block title %}Study Organizer{% endblock %}</title>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    {% block title %}Leaflet{% endblock %}
+  </title>
+
+  <!-- CSS -->
+
+  <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='app.css') }}"
+  >
+
+  <!-- GOOGLE FONT -->
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
 </head>
-<body class="{% if user.is_authenticated %}app-shell{% else %}auth-shell{% endif %}">
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="flash-stack">
-        {% for category, message in messages %}
-          <div class="flash flash-{{ 'danger' if category=='error' else 'success' }}">{{ message }}</div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
 
-  {% block content %}{% endblock %}
+<body>
 
-  <script src="{{ url_for('static', filename='index.js') }}"></script>
+  <!-- GLOBAL NAVBAR -->
+
+  {% if user.is_authenticated %}
+
+  <nav class="global-navbar">
+
+    <!-- LEFT -->
+
+    <div class="global-left">
+
+      <a
+        href="{{ url_for('views.home') }}"
+        class="logo-link"
+      >
+
+        <img
+          src="{{ url_for('static', filename='images/logo.png') }}"
+          alt="Leaflet Logo"
+        >
+
+        <div class="global-brand">
+
+          <h2>
+            Leaflet
+          </h2>
+
+          <p>
+            Your Notes, Beautifully Organized.
+          </p>
+
+        </div>
+
+      </a>
+
+    </div>
+
+    <!-- CENTER -->
+
+    <div class="global-center">
+
+      <a
+        href="{{ url_for('views.home') }}"
+        class="nav-link"
+      >
+        Home
+      </a>
+
+      <a
+        href="{{ url_for('views.all_notes') }}"
+        class="nav-link"
+      >
+        All Notes
+      </a>
+
+      <a
+        href="{{ url_for('views.upload_pdf') }}"
+        class="nav-link"
+      >
+        Upload
+      </a>
+
+    </div>
+
+    <!-- RIGHT -->
+
+    <div class="global-right">
+
+      <span class="nav-user">
+        Hello, {{ user.first_name }}
+      </span>
+
+      <a
+        href="{{ url_for('auth.logout') }}"
+        class="logout-nav"
+      >
+        Logout
+      </a>
+
+    </div>
+
+  </nav>
+
+  {% endif %}
+
+  <!-- PAGE CONTENT -->
+
+  <main>
+
+    {% block content %}
+    {% endblock %}
+
+  </main>
+
 </body>
+
 </html>

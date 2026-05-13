@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}New Folder{% endblock %}
+
+{% block content %}
+
+<div class="folder-page">
+
+  <section class="folder-card">
+
+    <!-- DECOR -->
+
+    <div class="folder-decor">
+      🌿 ✨ ☁️ 📁 🍃
+    </div>
+
+    <!-- HEADER -->
+
+    <p class="folder-label">
+      ORGANIZATION SPACE
+    </p>
+
+    <h1>
+      Create a new folder
+    </h1>
+
+    <p class="folder-subtext">
+      Organize your notes, PDFs, research,
+      lectures, and creative ideas beautifully.
+    </p>
+
+    <!-- FORM -->
+
+    <form
+      method="POST"
+      class="folder-form"
+    >
+
+      <input
+        type="text"
+        name="folder_name"
+        placeholder="Folder name"
+        required
+      >
+
+      <button type="submit">
+        ✨ Create Folder
+      </button>
+
+    </form>
+
+    <!-- MINI TIPS -->
+
+    <div class="folder-tips">
+
+      <div class="folder-tip">
+        📚 Study Notes
+      </div>
+
+      <div class="folder-tip">
+        ⚖️ Case Law
+      </div>
+
+      <div class="folder-tip">
+        🧠 Research
+      </div>
+
+      <div class="folder-tip">
+        🌿 Journal
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
+
+{% endblock %}

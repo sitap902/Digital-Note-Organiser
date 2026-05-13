@@ -1,14 +1,107 @@
 {% extends "base.html" %}
-{% block title %}Login{% endblock %}
+{% block title %}Login | Leaflet{% endblock %}
+
 {% block content %}
-<div class="auth-card">
-  <p class="eyebrow">Welcome back</p>
-  <h1>Sign in to your organizer</h1>
-  <form method="POST" class="auth-form">
-    <input type="email" name="email" placeholder="Email address">
-    <input type="password" name="password" placeholder="Password">
-    <button type="submit" class="primary-btn">Log in</button>
-  </form>
-  <p class="switch-link">Need an account? <a href="{{ url_for('auth.sign_up') }}">Create one</a></p>
+
+<div class="auth-shell">
+
+  <!-- LEFT PANEL -->
+  <section class="auth-panel">
+
+    <div class="auth-card">
+
+      <div class="auth-brand">
+
+        <img
+          src="{{ url_for('static', filename='images/logo.png') }}"
+          alt="Leaflet"
+        >
+
+        <div>
+          <h2>Leaflet</h2>
+          <p>Your thoughts, beautifully organized.</p>
+        </div>
+
+      </div>
+
+      <div class="auth-copy">
+
+        <span class="eyebrow">
+          WELCOME BACK
+        </span>
+
+        <h1>
+          Sign in to your organizer
+        </h1>
+
+        <p>
+          Keep your notes, ideas, and reading library
+          in one peaceful place.
+        </p>
+
+      </div>
+
+      <form method="POST" class="auth-form">
+
+        <input
+          type="email"
+          name="email"
+          placeholder="Email address"
+          required
+        >
+
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          required
+        >
+
+        <button type="submit">
+          Log in
+        </button>
+
+      </form>
+
+      <p class="auth-footer">
+        Need an account?
+
+        <a href="{{ url_for('auth.sign_up') }}">
+          Create one
+        </a>
+      </p>
+
+    </div>
+
+  </section>
+
+  <!-- RIGHT VISUAL -->
+  <section class="auth-visual">
+
+    <div class="visual-content">
+
+      <img
+        src="{{ url_for('static', filename='images/notebook.png') }}"
+        alt="Notebook"
+      >
+
+      <div class="visual-quote">
+
+        <h2>
+          Organize your thoughts beautifully.
+        </h2>
+
+        <p>
+          A calm digital space for notes,
+          PDFs, journals, and ideas.
+        </p>
+
+      </div>
+
+    </div>
+
+  </section>
+
 </div>
+
 {% endblock %}

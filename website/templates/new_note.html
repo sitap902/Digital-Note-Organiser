@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% block title %}New Note{% endblock %}
+
+{% block content %}
+
+<div class="new-note-page">
+
+  <div class="new-note-card">
+
+    <!-- DECOR -->
+
+    <div class="note-emoji">
+      ☁️ ✈️ ☀️ 🌿 ✨ 📝 🌼 🍃
+    </div>
+
+    <!-- HEADER -->
+
+    <p class="note-mini-text">
+      your peaceful writing space
+    </p>
+
+    <h1>
+      Create a new note
+    </h1>
+
+    <p class="note-subtitle">
+      Capture thoughts, study notes, journal reflections,
+      or tiny sparks of inspiration beautifully.
+    </p>
+
+    <!-- FORM -->
+
+    <form method="POST" class="new-note-form">
+
+      <input
+        type="text"
+        name="title"
+        placeholder="Note title"
+        required
+      >
+
+      <input
+        type="text"
+        name="category"
+        placeholder="Category or notebook"
+      >
+
+      <!-- FOLDER DROPDOWN -->
+
+      <select
+        name="folder_id"
+        class="note-select"
+      >
+
+        <option value="">
+          Select folder
+        </option>
+
+        {% for folder in folders %}
+
+        <option value="{{ folder.id }}">
+          {{ folder.name }}
+        </option>
+
+        {% endfor %}
+
+      </select>
+
+      <!-- NOTE CONTENT -->
+
+      <textarea
+        name="data"
+        placeholder="Write your thoughts here..."
+        required
+      ></textarea>
+
+      <!-- BUTTON -->
+
+      <button type="submit">
+        Save Note
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+<style>
+
+.new-note-page{
+  min-height:100vh;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  padding:40px 20px;
+}
+
+.new-note-card{
+  width:100%;
+  max-width:760px;
+
+  background:#ffffff;
+
+  border-radius:36px;
+
+  padding:60px 50px;
+
+  text-align:center;
+
+  box-shadow:0 10px 30px rgba(0,0,0,0.04);
+}
+
+/* EMOJIS */
+
+.note-emoji{
+  font-size:40px;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  gap:14px;
+
+  flex-wrap:wrap;
+
+  margin-bottom:20px;
+
+  animation:floatEmoji 5s ease-in-out infinite;
+}
+
+@keyframes floatEmoji{
+
+  0%{
+    transform:translateY(0px);
+  }
+
+  50%{
+    transform:translateY(-6px);
+  }
+
+  100%{
+    transform:translateY(0px);
+  }
+
+}
+
+/* LABEL */
+
+.note-mini-text{
+  font-size:13px;
+  font-weight:700;
+
+  text-transform:uppercase;
+  letter-spacing:2px;
+
+  color:#7d846d;
+
+  margin-bottom:18px;
+}
+
+/* TITLE */
+
+.new-note-card h1{
+  font-size:60px;
+  line-height:1.05;
+
+  color:#17352d;
+
+  margin-bottom:18px;
+}
+
+/* SUBTEXT */
+
+.note-subtitle{
+  font-size:19px;
+  line-height:1.7;
+
+  color:#6f7565;
+
+  margin-bottom:36px;
+}
+
+/* FORM */
+
+.new-note-form{
+  display:flex;
+  flex-direction:column;
+
+  gap:20px;
+}
+
+.new-note-form input,
+.note-select,
+.new-note-form textarea{
+  width:100%;
+
+  border:none;
+
+  background:#f6f7f1;
+
+  border-radius:22px;
+
+  padding:22px 24px;
+
+  font-size:18px;
+
+  font-family:'Outfit', sans-serif;
+
+  color:#17352d;
+
+  outline:none;
+}
+
+/* DROPDOWN */
+
+.note-select{
+  appearance:none;
+
+  cursor:pointer;
+}
+
+/* TEXTAREA */
+
+.new-note-form textarea{
+  min-height:220px;
+
+  resize:none;
+}
+
+/* BUTTON */
+
+.new-note-form button{
+  border:none;
+
+  background:#8ea56c;
+
+  color:white;
+
+  font-size:18px;
+  font-weight:700;
+
+  padding:20px;
+
+  border-radius:22px;
+
+  cursor:pointer;
+
+  transition:0.3s;
+
+  font-family:'Outfit', sans-serif;
+}
+
+.new-note-form button:hover{
+  background:#7d9460;
+
+  transform:translateY(-2px);
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+  .new-note-card{
+    padding:40px 26px;
+  }
+
+  .new-note-card h1{
+    font-size:44px;
+  }
+
+  .note-subtitle{
+    font-size:16px;
+  }
+
+  .note-emoji{
+    font-size:30px;
+  }
+
+}
+
+</style>
+
+{% endblock %}

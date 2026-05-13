@@ -2,175 +2,554 @@ from collections import Counter
 from pathlib import Path
 from uuid import uuid4
 import json
+import os
 
-from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for
-from flask_login import current_user, login_required
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for
+)
+
+from flask_login import (
+    current_user,
+    login_required
+)
+
 from werkzeug.utils import secure_filename
 
 from . import db
-from .models import Note
+from .models import Note, Folder
+
 
 views = Blueprint('views', __name__)
-ALLOWED_EXTENSIONS = {'pdf'}
+
+
+# ----------------------------
+# ALLOWED FILE TYPES
+# ----------------------------
+
+ALLOWED_EXTENSIONS = {
+    'pdf',
+    'doc',
+    'docx',
+    'txt',
+    'rtf',
+    'md',
+    'ppt',
+    'pptx',
+    'png',
+    'jpg',
+    'jpeg'
+}
 
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+    return (
+        '.' in filename
+        and
+        filename.rsplit('.', 1)[1].lower()
+        in ALLOWED_EXTENSIONS
+    )
 
 
-@views.route('/', methods=['GET', 'POST'])
+# ----------------------------
+# HOME
+# ----------------------------
+
+@views.route('/')
 @login_required
 def home():
-    if request.method == 'POST':
-        title = (request.form.get('title') or '').strip()
-        note_text = (request.form.get('note') or '').strip()
-        category = (request.form.get('category') or 'Lecture').strip()
-        notebook = (request.form.get('notebook') or 'My Notes').strip()
-        tags = (request.form.get('tags') or '').strip()
-        pinned = request.form.get('pinned') == 'on'
-
-        if len(note_text) < 1:
-            flash('Note is too short!', category='error')
-        else:
-            new_note = Note(
-                title=title or 'Untitled note',
-                data=note_text,
-                category=category,
-                notebook=notebook or 'My Notes',
-                tags=tags,
-                pinned=pinned,
-                user_id=current_user.id,
-            )
-            db.session.add(new_note)
-            db.session.commit()
-            flash('Note saved to your organizer.', category='success')
-            return redirect(url_for('views.home'))
-
-    selected_notebook = (request.args.get('notebook') or 'All').strip()
-    selected_type = (request.args.get('type') or 'All').strip()
-    query = (request.args.get('q') or '').strip().lower()
-    selected_id = request.args.get('selected')
 
     all_items = sorted(
         current_user.notes,
-        key=lambda n: ((not bool(n.pinned)), n.date),
-        reverse=True,
+        key=lambda n: (
+            (not bool(n.pinned)),
+            n.date
+        ),
+        reverse=True
     )
 
-    filtered_items = []
-    for note in all_items:
-        item_type = 'PDF' if note.file else 'Note'
-        matches_notebook = selected_notebook == 'All' or note.notebook == selected_notebook
-        matches_type = selected_type == 'All' or item_type == selected_type
-        haystack = f"{note.title} {note.data} {note.tags} {note.notebook} {note.category} {Path(note.file).name if note.file else ''}".lower()
-        matches_query = not query or query in haystack
+    notebook_counts = Counter(
+        note.notebook or 'My Notes'
+        for note in current_user.notes
+    )
 
-        if matches_notebook and matches_type and matches_query:
-            filtered_items.append(note)
+    pinned_count = sum(
+        1 for note in current_user.notes
+        if note.pinned
+    )
 
-    notebook_counts = Counter(note.notebook or 'My Notes' for note in current_user.notes)
-    type_counts = Counter('PDF' if note.file else 'Note' for note in current_user.notes)
-    pinned_count = sum(1 for note in current_user.notes if note.pinned)
-    pdf_count = sum(1 for note in current_user.notes if note.file)
-
-    active_item = None
-    if selected_id:
-        active_item = next((item for item in filtered_items if str(item.id) == str(selected_id)), None)
-    if active_item is None and filtered_items:
-        active_item = filtered_items[0]
+    pdf_count = sum(
+        1 for note in current_user.notes
+        if note.file
+    )
 
     stats = {
         'total_notes': len(current_user.notes),
-        'filtered_notes': len(filtered_items),
         'notebooks': len(notebook_counts),
         'pinned_notes': pinned_count,
         'pdfs': pdf_count,
     }
 
+    folders = Folder.query.filter_by(
+        user_id=current_user.id
+    ).all()
+
     return render_template(
         'home.html',
         user=current_user,
-        notes=filtered_items,
-        active_note=active_item,
-        notebook_counts=dict(sorted(notebook_counts.items())),
-        type_counts=dict(sorted(type_counts.items())),
-        selected_notebook=selected_notebook,
-        selected_type=selected_type,
-        query=query,
+        notes=all_items,
         stats=stats,
+        folders=folders
     )
 
 
-@views.route('/upload-pdf', methods=['POST'])
+# ----------------------------
+# ALL NOTES
+# ----------------------------
+
+@views.route('/all-notes')
+@login_required
+def all_notes():
+
+    return render_template(
+        "allnotes.html",
+        user=current_user,
+        notes=current_user.notes
+    )
+
+
+# ----------------------------
+# NEW NOTE
+# ----------------------------
+
+@views.route('/new-note', methods=['GET', 'POST'])
+@login_required
+def new_note():
+
+    folders = Folder.query.filter_by(
+        user_id=current_user.id
+    ).all()
+
+    if request.method == 'POST':
+
+        title = (
+            request.form.get('title')
+            or 'Untitled note'
+        ).strip()
+
+        data = (
+            request.form.get('data')
+            or ''
+        ).strip()
+
+        category = (
+            request.form.get('category')
+            or 'General'
+        ).strip()
+
+        folder_id = request.form.get('folder_id')
+
+        if len(data) < 1:
+
+            flash(
+                'Note is too short!',
+                category='error'
+            )
+
+        else:
+
+            new_note = Note(
+                title=title,
+                data=data,
+                category=category,
+                user_id=current_user.id,
+                folder_id=folder_id if folder_id else None
+            )
+
+            db.session.add(new_note)
+            db.session.commit()
+
+            flash(
+                'New note created!',
+                category='success'
+            )
+
+            return redirect(
+                url_for('views.all_notes')
+            )
+
+    return render_template(
+        "new_note.html",
+        user=current_user,
+        folders=folders
+    )
+
+    if request.method == 'POST':
+
+        title = request.form.get('title')
+        category = request.form.get('category')
+        data = request.form.get('data')
+
+        if len(title) < 1:
+            flash('Title is too short.', category='error')
+
+        else:
+
+            new_note = Note(
+                title=title,
+                category=category,
+                data=data,
+                user_id=current_user.id
+            )
+
+            db.session.add(new_note)
+            db.session.commit()
+
+            flash('Note created!', category='success')
+
+            return redirect(url_for('views.all_notes'))
+
+    return render_template(
+        'new_note.html',
+        user=current_user
+    )
+
+    folders = Folder.query.filter_by(
+        user_id=current_user.id
+    ).all()
+
+    if request.method == 'POST':
+
+        title = (
+            request.form.get('title')
+            or 'Untitled note'
+        ).strip()
+
+        note_text = (
+            request.form.get('note')
+            or ''
+        ).strip()
+
+        category = (
+            request.form.get('category')
+            or 'General'
+        ).strip()
+
+        folder_id = request.form.get('folder_id')
+
+        if len(note_text) < 1:
+
+            flash(
+                'Note is too short!',
+                category='error'
+            )
+
+        else:
+
+            new_note = Note(
+                title=title,
+                data=note_text,
+                category=category,
+                user_id=current_user.id,
+                folder_id=folder_id if folder_id else None
+            )
+
+            db.session.add(new_note)
+            db.session.commit()
+
+            flash(
+                'New note created!',
+                category='success'
+            )
+
+            return redirect(
+                url_for('views.home')
+            )
+
+    return render_template(
+        "new_note.html",
+        user=current_user,
+        folders=folders
+    )
+
+
+# ----------------------------
+# NEW FOLDER
+# ----------------------------
+
+@views.route('/new-folder', methods=['GET', 'POST'])
+@login_required
+def new_folder():
+
+    if request.method == 'POST':
+
+        folder_name = (
+            request.form.get('folder_name')
+            or ''
+        ).strip()
+
+        if folder_name:
+
+            folder = Folder(
+                name=folder_name,
+                user_id=current_user.id
+            )
+
+            db.session.add(folder)
+            db.session.commit()
+
+            flash(
+                'Folder created!',
+                category='success'
+            )
+
+            return redirect(
+                url_for('views.home')
+            )
+
+    return render_template(
+        "new_folder.html",
+        user=current_user
+    )
+
+
+# ----------------------------
+# UPLOAD FILE
+# ----------------------------
+
+@views.route('/upload-pdf', methods=['GET', 'POST'])
 @login_required
 def upload_pdf():
-    title = (request.form.get('pdf_title') or '').strip()
-    notebook = (request.form.get('pdf_notebook') or 'Reference Library').strip()
-    tags = (request.form.get('pdf_tags') or '').strip()
-    pinned = request.form.get('pdf_pinned') == 'on'
+
+    if request.method == 'GET':
+
+        return render_template(
+            "upload_pdf.html",
+            user=current_user
+        )
+
+    title = (
+        request.form.get('pdf_title')
+        or ''
+    ).strip()
+
+    notebook = (
+        request.form.get('pdf_notebook')
+        or 'Reference Library'
+    ).strip()
+
+    tags = (
+        request.form.get('pdf_tags')
+        or ''
+    ).strip()
+
+    pinned = (
+        request.form.get('pdf_pinned')
+        == 'on'
+    )
+
     uploaded_file = request.files.get('pdf_file')
 
-    if not uploaded_file or uploaded_file.filename == '':
-        flash('Choose a PDF to upload.', category='error')
-        return redirect(url_for('views.home'))
+    if not uploaded_file:
+
+        flash(
+            'Please choose a file.',
+            category='error'
+        )
+
+        return redirect(
+            url_for('views.upload_pdf')
+        )
+
+    if uploaded_file.filename == '':
+
+        flash(
+            'No file selected.',
+            category='error'
+        )
+
+        return redirect(
+            url_for('views.upload_pdf')
+        )
 
     if not allowed_file(uploaded_file.filename):
-        flash('Only PDF files are supported.', category='error')
-        return redirect(url_for('views.home'))
 
-    safe_name = secure_filename(uploaded_file.filename)
-    unique_name = f"{uuid4().hex}_{safe_name}"
-    save_path = Path(current_app.config['UPLOAD_FOLDER']) / unique_name
+        flash(
+            'Unsupported file type.',
+            category='error'
+        )
+
+        return redirect(
+            url_for('views.upload_pdf')
+        )
+
+    safe_name = secure_filename(
+        uploaded_file.filename
+    )
+
+    unique_name = (
+        f"{uuid4().hex}_{safe_name}"
+    )
+
+    upload_folder = (
+        current_app.config['UPLOAD_FOLDER']
+    )
+
+    os.makedirs(
+        upload_folder,
+        exist_ok=True
+    )
+
+    save_path = (
+        Path(upload_folder)
+        / unique_name
+    )
+
     uploaded_file.save(save_path)
 
-    new_pdf = Note(
+    new_file = Note(
         title=title or Path(safe_name).stem,
-        data='Uploaded PDF resource',
-        category='PDF',
-        notebook=notebook or 'Reference Library',
+        data='Uploaded study material',
+        category='Upload',
+        notebook=notebook,
         tags=tags,
         pinned=pinned,
         file=unique_name,
-        user_id=current_user.id,
+        user_id=current_user.id
     )
-    db.session.add(new_pdf)
-    db.session.commit()
-    flash('PDF uploaded to your organizer.', category='success')
-    return redirect(url_for('views.home', selected=new_pdf.id))
 
+    db.session.add(new_file)
+    db.session.commit()
+
+    flash(
+        'File uploaded successfully!',
+        category='success'
+    )
+
+    return redirect(
+        url_for('views.home')
+    )
+
+
+# ----------------------------
+# VIEW UPLOADED FILE
+# ----------------------------
 
 @views.route('/uploads/<filename>')
 @login_required
 def uploaded_file(filename):
-    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
 
+    return send_from_directory(
+        current_app.config['UPLOAD_FOLDER'],
+        filename
+    )
+
+
+# ----------------------------
+# DELETE NOTE
+# ----------------------------
 
 @views.route('/delete-note', methods=['POST'])
 @login_required
 def delete_note():
+
     payload = json.loads(request.data)
+
     note_id = payload['noteId']
+
     note = Note.query.get(note_id)
+
     if note and note.user_id == current_user.id:
+
         if note.file:
-            file_path = Path(current_app.config['UPLOAD_FOLDER']) / note.file
+
+            file_path = (
+                Path(current_app.config['UPLOAD_FOLDER'])
+                / note.file
+            )
+
             if file_path.exists():
                 file_path.unlink()
+
         db.session.delete(note)
         db.session.commit()
 
     return jsonify({})
 
 
+# ----------------------------
+# TOGGLE PIN
+# ----------------------------
+
 @views.route('/toggle-pin', methods=['POST'])
 @login_required
 def toggle_pin():
-    payload = json.loads(request.data)
-    note_id = payload['noteId']
-    note = Note.query.get(note_id)
-    if note and note.user_id == current_user.id:
-        note.pinned = not bool(note.pinned)
-        db.session.commit()
-        return jsonify({'pinned': note.pinned})
 
-    return jsonify({'error': 'Note not found'}), 404
+    payload = json.loads(request.data)
+
+    note_id = payload['noteId']
+
+    note = Note.query.get(note_id)
+
+    if note and note.user_id == current_user.id:
+
+        note.pinned = not bool(note.pinned)
+
+        db.session.commit()
+
+        return jsonify({
+            'pinned': note.pinned
+        })
+
+    return jsonify({
+        'error': 'Note not found'
+    }), 404
+
+@views.route('/note/<int:note_id>')
+@login_required
+def view_note(note_id):
+
+    note = Note.query.get_or_404(note_id)
+
+    if note.user_id != current_user.id:
+
+        flash(
+            "Unauthorized access.",
+            category="error"
+        )
+
+        return redirect(
+            url_for('views.home')
+        )
+
+    return render_template(
+        "view_note.html",
+        user=current_user,
+        note=note
+    )
+
+@views.route('/folder/<int:folder_id>')
+@login_required
+def view_folder(folder_id):
+
+    folder = Folder.query.get_or_404(folder_id)
+
+    if folder.user_id != current_user.id:
+
+        return redirect(
+            url_for('views.home')
+        )
+
+    return render_template(
+        "view_folder.html",
+        user=current_user,
+        folder=folder
+    )

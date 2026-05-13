@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+{% block title %}Upload PDF{% endblock %}
+
+{% block content %}
+
+<div class="upload-shell">
+
+  <div class="upload-glow"></div>
+
+  <section class="upload-modal">
+
+    <!-- HEADER -->
+
+    <div class="upload-top">
+
+      <div>
+
+        <span class="upload-eyebrow">
+          REFERENCE LIBRARY
+        </span>
+
+        <h1>
+          Upload your file
+        </h1>
+
+        <p class="upload-subtext">
+          Upload PDFs, DOCX, TXT, RTF, PPTX,
+          research papers, lecture slides, and notes.
+        </p>
+
+      </div>
+
+      <a
+        href="{{ url_for('views.home') }}"
+        class="close-upload"
+      >
+        ✕
+      </a>
+
+    </div>
+
+    <!-- FILE TYPES -->
+
+    <div class="upload-tags">
+
+      <div class="upload-tag active">
+        📄 PDF
+      </div>
+
+      <div class="upload-tag">
+        📝 DOCX
+      </div>
+
+      <div class="upload-tag">
+        📚 TXT
+      </div>
+
+      <div class="upload-tag">
+        📎 RTF
+      </div>
+
+      <div class="upload-tag">
+        📊 PPTX
+      </div>
+
+    </div>
+
+    <!-- FORM -->
+
+    <form
+      method="POST"
+      enctype="multipart/form-data"
+      class="upload-form"
+    >
+
+      <!-- DROPZONE -->
+
+      <label
+        class="upload-dropzone"
+        id="dropzone"
+      >
+
+        <input
+          type="file"
+          id="pdfInput"
+          name="pdf_file"
+          accept=".pdf,.doc,.docx,.txt,.rtf,.md,.pptx,.png,.jpg,.jpeg"
+          required
+        >
+
+        <div class="dropzone-inner">
+
+          <div class="drop-icon">
+            ☁️
+          </div>
+
+          <h2 id="dropTitle">
+            Drag & drop to upload
+          </h2>
+
+          <p>
+            or browse from your device
+          </p>
+
+          <div
+            id="fileNameDisplay"
+            class="file-display"
+          >
+            No file selected
+          </div>
+
+        </div>
+
+      </label>
+
+      <!-- INPUTS -->
+
+      <div class="upload-grid">
+
+        <input
+          type="text"
+          name="pdf_title"
+          placeholder="File title"
+          required
+        >
+
+        <input
+          type="text"
+          name="pdf_notebook"
+          placeholder="Notebook name"
+        >
+
+      </div>
+
+      <div class="upload-grid">
+
+        <input
+          type="text"
+          name="pdf_tags"
+          placeholder="Tags, e.g. research, exam"
+        >
+
+        <!-- PIN -->
+<div class="pin-upload">
+
+  <label class="pin-label">
+
+    <input
+      type="checkbox"
+      name="pdf_pinned"
+    >
+
+    <span>
+      📌 Pin File
+    </span>
+
+  </label>
+
+</div>
+
+      <!-- FOOTER -->
+
+      <div class="upload-footer">
+
+        <p>
+          Keep your readings, lecture slides,
+          and study materials beautifully organized.
+        </p>
+
+        <button type="submit">
+          Upload file
+        </button>
+
+      </div>
+
+    </form>
+
+  </section>
+
+</div>
+
+<script>
+
+const dropzone =
+  document.getElementById("dropzone");
+
+const pdfInput =
+  document.getElementById("pdfInput");
+
+const fileNameDisplay =
+  document.getElementById("fileNameDisplay");
+
+if (dropzone && pdfInput) {
+
+  // FILE SELECT
+
+  pdfInput.addEventListener(
+    "change",
+    function () {
+
+      if (this.files.length > 0) {
+
+        fileNameDisplay.textContent =
+          "✓ " + this.files[0].name;
+
+      }
+
+    }
+  );
+
+  // DRAG ENTER
+
+  [
+    "dragenter",
+    "dragover"
+  ].forEach(eventName => {
+
+    dropzone.addEventListener(
+      eventName,
+      e => {
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        dropzone.classList.add("dragover");
+
+      }
+    );
+
+  });
+
+  // DRAG LEAVE
+
+  [
+    "dragleave",
+    "drop"
+  ].forEach(eventName => {
+
+    dropzone.addEventListener(
+      eventName,
+      e => {
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        dropzone.classList.remove("dragover");
+
+      }
+    );
+
+  });
+
+  // DROP FILE
+
+  dropzone.addEventListener(
+    "drop",
+    e => {
+
+      const files = e.dataTransfer.files;
+
+      if (files.length > 0) {
+
+        pdfInput.files = files;
+
+        fileNameDisplay.textContent =
+          "✓ " + files[0].name;
+
+      }
+
+    }
+  );
+
+}
+
+</script>
+
+{% endblock %}

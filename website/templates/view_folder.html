@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ folder.name }}{% endblock %}
+
+{% block content %}
+
+<div class="folder-view-page">
+
+  <div class="folder-view-top">
+
+    <div>
+
+      <p class="folder-mini-label">
+        YOUR FOLDER
+      </p>
+
+      <h1>
+        {{ folder.name }}
+      </h1>
+
+    </div>
+
+    <a
+      href="{{ url_for('views.home') }}"
+      class="folder-back-btn"
+    >
+      ← Back
+    </a>
+
+  </div>
+
+  <div class="folder-notes-grid">
+
+    {% for note in folder.notes %}
+
+    <a
+      href="{{ url_for('views.view_note', note_id=note.id) }}"
+      class="note-link"
+    >
+
+      <article class="note-card">
+
+        <div class="note-icon">
+          📝
+        </div>
+
+        <h2>
+          {{ note.title }}
+        </h2>
+
+        <p>
+          {{ note.data[:120] }}
+        </p>
+
+      </article>
+
+    </a>
+
+    {% endfor %}
+
+  </div>
+
+</div>
+
+{% endblock %}

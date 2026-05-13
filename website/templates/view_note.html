@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{{ note.title }}{% endblock %}
+
+{% block content %}
+
+<div class="view-note-page">
+
+  <section class="view-note-card">
+
+    <!-- TOP -->
+
+    <div class="view-note-top">
+
+      <div>
+
+        <p class="note-view-label">
+          YOUR NOTE
+        </p>
+
+        <h1>
+          {{ note.title }}
+        </h1>
+
+      </div>
+
+      <a
+        href="{{ url_for('views.all_notes') }}"
+        class="back-notes-btn"
+      >
+        ← Back
+      </a>
+
+    </div>
+
+    <!-- META -->
+
+    <div class="note-meta">
+
+      <span>
+        📁 {{ note.notebook or 'My Notes' }}
+      </span>
+
+      <span>
+        🏷 {{ note.category or 'General' }}
+      </span>
+
+      <span>
+        📅 {{ note.date.strftime('%b %d, %Y') }}
+      </span>
+
+    </div>
+
+    <!-- CONTENT -->
+
+    <div class="note-content">
+
+      {% if note.file %}
+
+        <a
+          href="{{ url_for('views.uploaded_file', filename=note.file) }}"
+          target="_blank"
+          class="open-file-btn"
+        >
+          📄 Open uploaded file
+        </a>
+
+      {% else %}
+
+        <p>
+          {{ note.data }}
+        </p>
+
+      {% endif %}
+
+    </div>
+
+  </section>
+
+</div>
+
+{% endblock %}

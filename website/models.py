@@ -14,6 +14,10 @@ class Note(db.Model):
     pinned = db.Column(db.Boolean, default=False)
     file = db.Column(db.String(300))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    folder_id = db.Column(
+    db.Integer,
+    db.ForeignKey('folder.id')
+)
 
 
 class User(db.Model, UserMixin):
@@ -23,3 +27,31 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(150))
 
     notes = db.relationship('Note', order_by='desc(Note.date)')
+
+
+class Folder(db.Model):
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    name = db.Column(
+        db.String(150)
+    )
+
+    date_created = db.Column(
+        db.DateTime(timezone=True),
+        default=func.now()
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id')
+    )
+
+    notes = db.relationship(
+        'Note',
+        backref='folder',
+        lazy=True
+    )
