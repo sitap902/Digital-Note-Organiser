@@ -1,3 +1,15 @@
-.vscode
-website/__pycache__
-website/database.db
+# macOS
+.DS_Store
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Database
+instance/database.db
+
+# Uploads
+website/uploads/
+
+# Virtual environment
+venv/
